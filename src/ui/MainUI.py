@@ -3,6 +3,7 @@ from PySide6.QtWidgets import (QMainWindow, QVBoxLayout, QHBoxLayout, QWidget, Q
 from src.views.GameTab import GameTab
 from src.views.RadioTab import RadioTab
 from src.views.SystemTab import SystemTab
+from src.views.ScrappingTab import ScrappingTab
 from src.controllers.GameController import GameController
 from src.managers.ThreadsManager import ThreadsManager
 from src.managers.ProcessesManager import ProcessManager
@@ -58,13 +59,15 @@ class MainUI(QMainWindow):
         self.radio_tab = RadioTab(radio_player=self.radio_player)
         self.system_tab = SystemTab()
         self.game_tab = GameTab(controller=self.game_controller)
+        self.scrapping_tab = ScrappingTab()
 
         self.tabs.addTab(self.radio_tab, "Radio")
         self.tabs.addTab(self.system_tab, "Sistema")
         self.tabs.addTab(self.game_tab, "Juego")
+        self.tabs.addTab(self.scrapping_tab, "Scrapping")
 
         # Iniciar cada pestaña en un hilo separado
-        self.tab_threads["system_tab"].start(self.system_tab.controller.start())
+        self.tab_threads["system_tab"].start(self.system_tab.controller.start)
 
         self.tabs.currentChanged.connect(self.handle_tab_change)
 
@@ -81,6 +84,7 @@ class MainUI(QMainWindow):
             ("Radio", lambda: self.tabs.setCurrentWidget(self.radio_tab)),
             ("Sistema", lambda: self.tabs.setCurrentWidget(self.system_tab)),
             ("Juego", lambda: self.tabs.setCurrentWidget(self.game_tab)),
+            ("Scrapping", lambda: self.tabs.setCurrentWidget(self.scrapping_tab)),
             ("Abrir Chrome", lambda: self.process_manager.open_resource(
                 "browser", "https://google.com", "No se pudo abrir Chrome.")),
             ("Visual Studio Code", lambda: self.process_manager.open_resource(

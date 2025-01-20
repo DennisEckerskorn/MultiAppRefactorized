@@ -1,4 +1,5 @@
 import threading
+import time
 
 
 class ThreadenTask:
@@ -19,7 +20,9 @@ class ThreadenTask:
         """Envuelve la ejecución del target para gestionar el estado."""
         try:
             while self.running:
-                target(*args, **kwargs)
+                if target:  # Verifica que target no sea None
+                    target(*args, **kwargs)
+                time.sleep(0.1)  # Evita un bucle intenso
         finally:
             self.running = False
 
