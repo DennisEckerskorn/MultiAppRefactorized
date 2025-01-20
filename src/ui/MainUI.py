@@ -80,11 +80,34 @@ class MainUI(QMainWindow):
 
     def init_left_panel(self):
         """Create buttons to switch between tabs and open applications."""
-        buttons = [
+        # Crear título para la sección de tabs
+        tabs_label = QLabel("Tabs:")
+        tabs_label.setStyleSheet("font-size: 14px; font-weight: bold;")
+        self.left_panel.addWidget(tabs_label)
+
+        # Botones para las pestañas
+        tabs_buttons = [
             ("Radio", lambda: self.tabs.setCurrentWidget(self.radio_tab)),
             ("Sistema", lambda: self.tabs.setCurrentWidget(self.system_tab)),
             ("Juego", lambda: self.tabs.setCurrentWidget(self.game_tab)),
             ("Scrapping", lambda: self.tabs.setCurrentWidget(self.scrapping_tab)),
+        ]
+        for text, command in tabs_buttons:
+            button = QPushButton(text)
+            button.clicked.connect(command)
+            button.setFixedHeight(40)
+            self.left_panel.addWidget(button)
+
+        # Separador entre secciones
+        self.left_panel.addSpacing(20)
+
+        # Crear título para la sección de procesos
+        processes_label = QLabel("Procesos:")
+        processes_label.setStyleSheet("font-size: 14px; font-weight: bold;")
+        self.left_panel.addWidget(processes_label)
+
+        # Botones para los procesos
+        processes_buttons = [
             ("Abrir Chrome", lambda: self.process_manager.open_resource(
                 "browser", "https://google.com", "No se pudo abrir Chrome.")),
             ("Visual Studio Code", lambda: self.process_manager.open_resource(
@@ -92,14 +115,23 @@ class MainUI(QMainWindow):
             ("Explorador de Windows", lambda: self.process_manager.open_resource(
                 "program", "explorer.exe", "No se pudo abrir el Explorador de Windows.")),
             ("Notepad++", lambda: self.process_manager.open_resource(
-                "program", r"C:\Program Files\Notepad++\notepad++.exe", "No se encontró Notepad++.")),
-            ("Cerrar App", self.close)
+                "program", r"C:\Program Files\Notepad++\notepad++.exe", "No se encontró Notepad++.exe.")),
         ]
-
-        for text, command in buttons:
+        for text, command in processes_buttons:
             button = QPushButton(text)
             button.clicked.connect(command)
+            button.setFixedHeight(40)
             self.left_panel.addWidget(button)
+
+        # Separador entre secciones
+        self.left_panel.addStretch()
+
+        # Botón para cerrar la aplicación
+        close_button = QPushButton("Cerrar App")
+        close_button.setStyleSheet("background-color: red; color: white; font-weight: bold;")
+        close_button.clicked.connect(self.close)
+        close_button.setFixedHeight(40)
+        self.left_panel.addWidget(close_button)
 
     def init_status_bar(self):
         """Create a status bar to display dynamic data."""
