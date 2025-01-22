@@ -168,4 +168,7 @@ class MainUI(QMainWindow):
         if hasattr(self.system_tab, "controller"):
             self.system_tab.controller.stop()
 
+        if hasattr(self, "scrapping_tab") and self.scrapping_tab.controller:
+            self.scrapping_tab.controller.stop_scraping()
+
         super().closeEvent(event)

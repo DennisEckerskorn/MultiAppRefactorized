@@ -1,9 +1,11 @@
-from PySide6.QtCore import QObject, Signal
 import requests
+import threading
+from PySide6.QtCore import QObject, Signal
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
-import threading
 from queue import Queue
+
+from src.dao.ScrappingDAO import ScrappingDAO
 from src.services.ThreadenTask import ThreadenTask
 
 
@@ -20,7 +22,8 @@ class ScrappingController(QObject):
 
         # Tareas para scraping
         self.scraping_task = ThreadenTask()
-        self.db_task = ThreadenTask()
+        self.dao = ScrappingDAO()
+
 
     def start_scraping(self, url):
         """Inicia el proceso de scraping."""
@@ -34,8 +37,8 @@ class ScrappingController(QObject):
 
         if url:
             print(f"[INFO] Iniciando scraping en: {url}")
+            self.dao.start_insertion_task()
             self.scraping_task.start(self.scrape_page, url)
-            # La lógica para la base de datos se implementará después
         else:
             print("[ERROR] No se proporcionó una URL válida.")
 
@@ -44,7 +47,7 @@ class ScrappingController(QObject):
         print("[INFO] Deteniendo el proceso de scraping.")
         self.running = False
         self.scraping_task.stop()
-        self.db_task.stop()
+        self.dao.stop_insertion_task()
         self.scraping_finished_signal.emit()
 
     def scrape_page(self, url):
@@ -68,7 +71,8 @@ class ScrappingController(QObject):
                     if not self.running:
                         break
                     self.link_queue.put((url, link))
-                    self.scrape_page(link)  # Scrapeo recursivo
+                    self.dao.insert_link_async(link, url)
+                    self.scrape_page(link)
             else:
                 print(f"[ERROR] Error al acceder a {url}: {response.status_code}")
         except Exception as e:
