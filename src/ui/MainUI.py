@@ -16,7 +16,7 @@ class MainUI(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("MultiService App")
-        self.setGeometry(100, 100, 1000, 600)
+        self.setGeometry(100, 100, 1200, 800)
 
         # Inicializar ThreadsManager y ProcessManager
         self.threads_manager = ThreadsManager()

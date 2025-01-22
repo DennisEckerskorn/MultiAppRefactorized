@@ -1,7 +1,7 @@
 import sqlite3
 from queue import Queue
 
-from src.services.DatabaseConnection import DatabaseConnection
+from src.dao.utils.DatabaseConnection import DatabaseConnection
 from src.services.ThreadenTask import ThreadenTask
 
 
