@@ -164,4 +164,8 @@ class MainUI(QMainWindow):
 
         # Detener hilos globales
         self.threads_manager.stop_all_threads()
+
+        if hasattr(self.system_tab, "controller"):
+            self.system_tab.controller.stop()
+
         super().closeEvent(event)

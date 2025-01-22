@@ -37,8 +37,11 @@ class SystemController(QObject):
                 "network": self.get_network_speed(),
                 "uptime": self.get_uptime()
             }
-            self.metrics_signal.emit(metrics)  # Emitir las métricas mediante la señal
-            time.sleep(self.interval)
+            self.metrics_signal.emit(metrics)
+            for _ in range(int(self.interval * 10)):
+                if not self.running:
+                    return
+            time.sleep(0.1)
 
     @staticmethod
     def get_network_speed():

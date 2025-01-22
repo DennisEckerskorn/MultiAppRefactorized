@@ -70,7 +70,10 @@ class ThreadsManager:
             current_time = datetime.datetime.now().strftime('%H:%M:%S')
             current_date = datetime.datetime.now().strftime('%d/%m/%Y')
             ui_instance.update_status_data({"hora": current_time, "fecha": current_date})
-            time.sleep(1)
+            for _ in range(10):
+                if not self.global_tasks[task_name].is_running():
+                    return
+            time.sleep(0.1)
 
     def update_temperature(self, ui_instance):
         """Actualiza la temperatura cada 10 minutos."""
@@ -84,7 +87,10 @@ class ThreadsManager:
                     ui_instance.update_status_data({"temperatura": f"{temperature}°C"})
             except Exception as e:
                 print(f"[DEBUG] Error al obtener la temperatura: {e}")
-            time.sleep(600)
+            for _ in range(600):
+                if not self.global_tasks[task_name].is_running():
+                    return
+                time.sleep(1)
 
     def get_real_temperature(self, api_key, city):
         """Obtiene la temperatura actual desde OpenWeatherMap."""
@@ -108,4 +114,7 @@ class ThreadsManager:
                 ui_instance.update_status_data({"emails": unread_count})
             except Exception as e:
                 print(f"[DEBUG] Error en el hilo de correos: {e}")
-            time.sleep(60)
+            for _ in range(60):
+                if not self.global_tasks[task_name].is_running():
+                    return
+                time.sleep(1)
