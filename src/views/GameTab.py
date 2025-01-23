@@ -1,4 +1,5 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QGraphicsView, QGraphicsScene, QLabel, QMessageBox
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QGraphicsView, QGraphicsScene, QLabel, \
+    QMessageBox
 from PySide6.QtGui import QColor, QPen
 from PySide6.QtCore import Qt, QEvent, Slot
 from src.services.ThreadenTask import ThreadenTask
@@ -34,14 +35,17 @@ class GameTab(QWidget):
         self.start_button = QPushButton("Start Game")
         self.pause_button = QPushButton("Pause Game")
         self.reset_button = QPushButton("Reset Game")
+        self.stop_button = QPushButton("Stop Game")
 
         self.start_button.clicked.connect(self.start_game)
         self.pause_button.clicked.connect(self.pause_game)
         self.reset_button.clicked.connect(self.reset_game)
+        self.stop_button.clicked.connect(self.stop_game)
 
         left_panel.addWidget(self.start_button)
         left_panel.addWidget(self.pause_button)
         left_panel.addWidget(self.reset_button)
+        left_panel.addWidget(self.stop_button)
 
         # Área de juego
         self.graphics_view = QGraphicsView()
@@ -101,6 +105,17 @@ class GameTab(QWidget):
             self.lines_label.setText("Líneas ganadas: 0")
         print("[DEBUG] Juego reiniciado.")
         self.setFocus()
+
+    @Slot()
+    def stop_game(self):
+        """Detiene el juego completamente."""
+        if self.game_thread.is_running():
+            self.game_thread.stop()
+            self.controller.stop_game()
+            self.status_label.setText("Estado: Juego detenido")
+            print("[DEBUG] Juego detenido.")
+        else:
+            print("[DEBUG] El juego ya está detenido.")
 
     @Slot(str, dict)
     def update_game_view(self, event, data):

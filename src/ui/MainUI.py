@@ -14,7 +14,6 @@ from src.services.ThreadenTask import ThreadenTask
 from src.services.RadioPlayer import RadioPlayer
 
 
-
 class MainUI(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -176,6 +175,12 @@ class MainUI(QMainWindow):
 
         # Detener hilos globales
         self.threads_manager.stop_all_threads()
+
+        # Detener el hilo del GameTab
+        if hasattr(self, "game_tab") and hasattr(self.game_tab, "game_thread"):
+            if self.game_tab.game_thread.is_running():
+                self.game_tab.game_thread.stop()
+                print("[DEBUG] Hilo de GameTab detenido.")
 
         if hasattr(self.system_tab, "controller"):
             self.system_tab.controller.stop()
