@@ -1,10 +1,13 @@
 from PySide6.QtWidgets import (QMainWindow, QVBoxLayout, QHBoxLayout, QWidget, QPushButton, QTabWidget, QLabel,
                                QStatusBar)
+
 from src.views.GameTab import GameTab
 from src.views.RadioTab import RadioTab
 from src.views.SystemTab import SystemTab
 from src.views.ScrappingTab import ScrappingTab
+from src.views.EmailTab import EmailTab
 from src.controllers.GameController import GameController
+from src.controllers.EmailController import EmailController
 from src.managers.ThreadsManager import ThreadsManager
 from src.managers.ProcessesManager import ProcessManager
 from src.services.ThreadenTask import ThreadenTask
@@ -22,6 +25,12 @@ class MainUI(QMainWindow):
         self.threads_manager = ThreadsManager()
         self.process_manager = ProcessManager(self)
         self.radio_player = RadioPlayer()
+        self.email_controller = EmailController(
+            pop_server="192.168.120.103",
+            smtp_server="192.168.120.103",
+            email="dennis@psp.ieslamar.org",
+            password="1234"
+        )
 
         # Hilos para las pestañas
         self.tab_threads = {
@@ -60,11 +69,13 @@ class MainUI(QMainWindow):
         self.system_tab = SystemTab()
         self.game_tab = GameTab(controller=self.game_controller)
         self.scrapping_tab = ScrappingTab()
+        self.email_tab = EmailTab(email_controller=self.email_controller)
 
         self.tabs.addTab(self.radio_tab, "Radio")
         self.tabs.addTab(self.system_tab, "Sistema")
         self.tabs.addTab(self.game_tab, "Juego")
         self.tabs.addTab(self.scrapping_tab, "Scrapping")
+        self.tabs.addTab(self.email_tab, "Correo")
 
         # Iniciar cada pestaña en un hilo separado
         self.tab_threads["system_tab"].start(self.system_tab.controller.start)
@@ -91,6 +102,7 @@ class MainUI(QMainWindow):
             ("Sistema", lambda: self.tabs.setCurrentWidget(self.system_tab)),
             ("Juego", lambda: self.tabs.setCurrentWidget(self.game_tab)),
             ("Scrapping", lambda: self.tabs.setCurrentWidget(self.scrapping_tab)),
+            ("Correo", lambda: self.tabs.setCurrentWidget(self.email_tab)),
         ]
         for text, command in tabs_buttons:
             button = QPushButton(text)
@@ -170,5 +182,10 @@ class MainUI(QMainWindow):
 
         if hasattr(self, "scrapping_tab") and self.scrapping_tab.controller:
             self.scrapping_tab.controller.stop_scraping()
+
+        if hasattr(self.email_controller, "fetch_task"):
+            self.email_controller.fetch_task.stop()
+        if hasattr(self.email_controller, "send_task"):
+            self.email_controller.send_task.stop()
 
         super().closeEvent(event)
