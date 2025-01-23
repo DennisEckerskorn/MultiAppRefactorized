@@ -62,7 +62,7 @@ class MainUI(QMainWindow):
         self.threads_manager.start_global_task("emails", self.threads_manager.update_emails, self)
 
     def init_tabs(self):
-        """Create and add tabs to the tab widget."""
+        """Crear y añadir tabs a la ventana"""
         self.game_controller = GameController()
         self.radio_tab = RadioTab(radio_player=self.radio_player)
         self.system_tab = SystemTab()
@@ -76,7 +76,6 @@ class MainUI(QMainWindow):
         self.tabs.addTab(self.scrapping_tab, "Scrapping")
         self.tabs.addTab(self.email_tab, "Correo")
 
-        # Iniciar cada pestaña en un hilo separado
         self.tab_threads["system_tab"].start(self.system_tab.controller.start)
 
         self.tabs.currentChanged.connect(self.handle_tab_change)
@@ -89,7 +88,7 @@ class MainUI(QMainWindow):
             current_widget.graphics_view.setFocus()
 
     def init_left_panel(self):
-        """Create buttons to switch between tabs and open applications."""
+        """Crea botones para navegar entre los tabs"""
         # Crear título para la sección de tabs
         tabs_label = QLabel("Tabs:")
         tabs_label.setStyleSheet("font-size: 14px; font-weight: bold;")
@@ -134,7 +133,6 @@ class MainUI(QMainWindow):
             button.setFixedHeight(40)
             self.left_panel.addWidget(button)
 
-        # Separador entre secciones
         self.left_panel.addStretch()
 
         # Botón para cerrar la aplicación
@@ -145,7 +143,7 @@ class MainUI(QMainWindow):
         self.left_panel.addWidget(close_button)
 
     def init_status_bar(self):
-        """Create a status bar to display dynamic data."""
+        """Crea una barra de status para mostrar información"""
         self.status_bar = QStatusBar()
         self.setStatusBar(self.status_bar)
 
@@ -162,35 +160,50 @@ class MainUI(QMainWindow):
             self.status_bar.addWidget(label)
 
     def update_status_data(self, data):
-        """Update the status bar with new data."""
+        """Actualiza la barra de estado."""
         for key, value in data.items():
             if key in self.status_labels:
                 self.status_labels[key].setText(f"{key.capitalize()}: {value}")
 
     def closeEvent(self, event):
-        """Stop all threads when the application is closed."""
-        # Detener hilos de las pestañas
-        for name, task in self.tab_threads.items():
-            task.stop()
+        """Terminar todos los hilos y limpiar resources al cerrar la aplicación."""
+        try:
+            # Detener hilos de las pestañas
+            for name, task in self.tab_threads.items():
+                if task.is_running():
+                    task.stop()
+                    print(f"[DEBUG] Hilo de {name} detenido.")
 
-        # Detener hilos globales
-        self.threads_manager.stop_all_threads()
+            # Detener hilos globales
+            self.threads_manager.stop_all_threads()
+            print("[DEBUG] Hilos globales detenidos.")
 
-        # Detener el hilo del GameTab
-        if hasattr(self, "game_tab") and hasattr(self.game_tab, "game_thread"):
-            if self.game_tab.game_thread.is_running():
-                self.game_tab.game_thread.stop()
-                print("[DEBUG] Hilo de GameTab detenido.")
+            # Detener el hilo del GameTab
+            if hasattr(self, "game_tab") and hasattr(self.game_tab, "game_thread"):
+                if self.game_tab.game_thread.is_running():
+                    self.game_tab.game_thread.stop()
+                    print("[DEBUG] Hilo de GameTab detenido.")
 
-        if hasattr(self.system_tab, "controller"):
-            self.system_tab.controller.stop()
+            # Detener el controlador del sistema
+            if hasattr(self.system_tab, "controller"):
+                self.system_tab.controller.stop()
+                print("[DEBUG] Controlador de SystemTab detenido.")
 
-        if hasattr(self, "scrapping_tab") and self.scrapping_tab.controller:
-            self.scrapping_tab.controller.stop_scraping()
+            # Detener el controlador del ScrappingTab
+            if hasattr(self, "scrapping_tab") and self.scrapping_tab.controller:
+                self.scrapping_tab.controller.stop_scraping()
+                print("[DEBUG] Hilo de ScrappingTab detenido.")
 
-        if hasattr(self.email_controller, "fetch_task"):
-            self.email_controller.fetch_task.stop()
-        if hasattr(self.email_controller, "send_task"):
-            self.email_controller.send_task.stop()
+            # Detener tareas del EmailController
+            if hasattr(self.email_controller, "task_manager"):
+                if self.email_controller.task_manager.fetch_task.is_running():
+                    self.email_controller.task_manager.fetch_task.stop()
+                    print("[DEBUG] Hilo de descarga de correos detenido.")
+                if self.email_controller.task_manager.send_task.is_running():
+                    self.email_controller.task_manager.send_task.stop()
+                    print("[DEBUG] Hilo de envío de correos detenido.")
+
+        except Exception as e:
+            print(f"[ERROR] Error al cerrar hilos: {e}")
 
         super().closeEvent(event)

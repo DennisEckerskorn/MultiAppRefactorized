@@ -1,5 +1,4 @@
 import sqlite3
-
 from src.dao.utils.DatabaseConnection import DatabaseConnection
 
 
@@ -18,6 +17,7 @@ class EmailDao:
             recipient TEXT NOT NULL,
             subject TEXT,
             body TEXT,
+            message_id TEXT UNIQUE NOT NULL,
             received_at DATETIME DEFAULT CURRENT_TIMESTAMP
         );
         """
@@ -42,21 +42,35 @@ class EmailDao:
         finally:
             cursor.close()
 
-    def save_email(self, sender, recipient, subject, body):
-        """Guarda un correo recibido en la base de datos."""
-        insert_query = """
-        INSERT INTO received_emails (sender, recipient, subject, body)
-        VALUES (?, ?, ?, ?);
-        """
+    def email_exists(self, message_id):
+        """Verifica si un correo con un determinado `message_id` ya existe."""
+        query = "SELECT COUNT(1) FROM received_emails WHERE message_id = ?;"
         cursor = self.connection.cursor()
         try:
-            cursor.execute(insert_query, (sender, recipient, subject, body))
-            self.connection.commit()
-            print(f"[INFO] Correo recibido guardado: {subject}")
+            cursor.execute(query, (message_id,))
+            return cursor.fetchone()[0] > 0
         except sqlite3.Error as e:
-            print(f"[ERROR] Error al guardar el correo recibido: {e}")
+            print(f"[ERROR] Error al verificar el correo: {e}")
+            return False
         finally:
             cursor.close()
+
+    def save_email(self, sender, recipient, subject, body, message_id):
+        """Guarda un correo recibido en la base de datos si no existe."""
+        if not self.email_exists(message_id):
+            insert_query = """
+            INSERT INTO received_emails (sender, recipient, subject, body, message_id)
+            VALUES (?, ?, ?, ?, ?);
+            """
+            cursor = self.connection.cursor()
+            try:
+                cursor.execute(insert_query, (sender, recipient, subject, body, message_id))
+                self.connection.commit()
+                print(f"[INFO] Correo recibido guardado: {subject}")
+            except sqlite3.Error as e:
+                print(f"[ERROR] Error al guardar el correo recibido: {e}")
+            finally:
+                cursor.close()
 
     def save_sent_email(self, sender, recipient, subject, body, attachment_path=None):
         """Guarda un correo enviado en la base de datos."""
@@ -76,12 +90,19 @@ class EmailDao:
 
     def fetch_received_emails(self):
         """Recupera todos los correos recibidos desde la base de datos."""
-        select_query = "SELECT * FROM received_emails ORDER BY received_at DESC;"
+        select_query = """
+        SELECT sender, recipient, subject, body, received_at 
+        FROM received_emails 
+        ORDER BY received_at DESC;
+        """
         cursor = self.connection.cursor()
         try:
             cursor.execute(select_query)
             rows = cursor.fetchall()
-            return [dict(row) for row in rows]
+            return [
+                {"sender": row[0], "recipient": row[1], "subject": row[2], "body": row[3], "received_at": row[4]}
+                for row in rows
+            ]
         except sqlite3.Error as e:
             print(f"[ERROR] Error al recuperar los correos recibidos: {e}")
             return []
@@ -90,40 +111,28 @@ class EmailDao:
 
     def fetch_sent_emails(self):
         """Recupera todos los correos enviados desde la base de datos."""
-        select_query = "SELECT * FROM sent_emails ORDER BY sent_at DESC;"
+        select_query = """
+        SELECT sender, recipient, subject, body, attachment_path, sent_at 
+        FROM sent_emails 
+        ORDER BY sent_at DESC;
+        """
         cursor = self.connection.cursor()
         try:
             cursor.execute(select_query)
             rows = cursor.fetchall()
-            return [dict(row) for row in rows]
+            return [
+                {
+                    "sender": row[0],
+                    "recipient": row[1],
+                    "subject": row[2],
+                    "body": row[3],
+                    "attachment_path": row[4],
+                    "sent_at": row[5],
+                }
+                for row in rows
+            ]
         except sqlite3.Error as e:
             print(f"[ERROR] Error al recuperar los correos enviados: {e}")
             return []
-        finally:
-            cursor.close()
-
-    def delete_received_email(self, email_id):
-        """Elimina un correo recibido de la base de datos."""
-        delete_query = "DELETE FROM received_emails WHERE id = ?;"
-        cursor = self.connection.cursor()
-        try:
-            cursor.execute(delete_query, (email_id,))
-            self.connection.commit()
-            print(f"[INFO] Correo recibido eliminado: ID {email_id}")
-        except sqlite3.Error as e:
-            print(f"[ERROR] Error al eliminar el correo recibido: {e}")
-        finally:
-            cursor.close()
-
-    def delete_sent_email(self, email_id):
-        """Elimina un correo enviado de la base de datos."""
-        delete_query = "DELETE FROM sent_emails WHERE id = ?;"
-        cursor = self.connection.cursor()
-        try:
-            cursor.execute(delete_query, (email_id,))
-            self.connection.commit()
-            print(f"[INFO] Correo enviado eliminado: ID {email_id}")
-        except sqlite3.Error as e:
-            print(f"[ERROR] Error al eliminar el correo enviado: {e}")
         finally:
             cursor.close()

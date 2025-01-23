@@ -5,13 +5,13 @@ from email.message import EmailMessage
 from email.parser import BytesParser
 from email.policy import default
 from src.dao.EmailDao import EmailDao
-from src.services.ThreadenTask import ThreadenTask
+from src.managers.EmailTaskManager import EmailTaskManager
 
 
 class EmailController(QObject):
-    update_received_signal = Signal(list)  # Señal para actualizar correos recibidos
-    update_sent_signal = Signal(list)  # Señal para actualizar correos enviados
-    task_finished_signal = Signal(str)  # Señal para indicar que una tarea ha terminado
+    update_received_signal = Signal(list)
+    update_sent_signal = Signal(list)
+    task_finished_signal = Signal(str)
 
     def __init__(self, pop_server, smtp_server, email, password, pop_port=110, smtp_port=25):
         super().__init__()
@@ -23,48 +23,36 @@ class EmailController(QObject):
         self.smtp_port = smtp_port
         self.dao = EmailDao()
 
-        # Tareas asincrónicas
-        self.fetch_task = ThreadenTask()
-        self.send_task = ThreadenTask()
+        # Inicializa el administrador de tareas
+        self.task_manager = EmailTaskManager(self)
 
     def fetch_email_async(self):
-        """Descarga los correos en un hilo separado."""
-        if not self.fetch_task.is_running():
-            self.fetch_task.start(self._fetch_emails)
-        else:
-            print("[INFO] La tarea de obtención de correos ya está en ejecución")
+        """Inicia la descarga de correos en un hilo."""
+        self.task_manager.start_fetch()
 
     def send_email_async(self, recipient, subject, body, attachment_path=None):
-        """Envía correos en un hilo separado."""
-        if not self.send_task.is_running():
-            self.send_task.start(self._send_email, recipient, subject, body, attachment_path)
-        else:
-            print("[INFO] La tarea de envío de correos ya está en ejecución")
+        """Inicia el envío de un correo en un hilo."""
+        self.task_manager.start_send(recipient, subject, body, attachment_path)
 
     def _fetch_emails(self):
-        """Lógica para descargar los correos del servidor POP3."""
+        """Lógica de obtención de correos."""
         try:
             pop_conn = poplib.POP3(self.pop_server, self.pop_port)
             pop_conn.user(self.email)
             pop_conn.pass_(self.password)
-            message_count = len(pop_conn.list()[1])
 
-            new_emails = []
-            for i in range(message_count):
-                response, lines, octets = pop_conn.retr(i + 1)
+            message_count = len(pop_conn.list()[1])
+            for i in range(1, message_count + 1):
+                response, lines, octets = pop_conn.retr(i)
                 message = BytesParser(policy=default).parsebytes(b"\n".join(lines))
 
-                # Guardar en la base de datos
-                self.dao.save_email(
-                    sender=message["From"],
-                    recipient=self.email,
-                    subject=message["Subject"],
-                    body=message.get_body(preferencelist=("plain",)).get_content(),
-                )
-                new_emails.append({
-                    "sender": message["From"],
-                    "subject": message["Subject"],
-                })
+                sender = message["From"]
+                subject = message["Subject"]
+                body = message.get_body(preferencelist=("plain",)).get_content()
+                message_id = message["Message-ID"]
+
+                # Guardar en la base de datos si no existe
+                self.dao.save_email(sender, self.email, subject, body, message_id)
 
             pop_conn.quit()
 
@@ -91,12 +79,13 @@ class EmailController(QObject):
                 msg.add_attachment(file_data, maintype="application", subtype="octet-stream", filename=file_name)
 
             with smtplib.SMTP(self.smtp_server, self.smtp_port) as smtp:
-                smtp.starttls()
                 smtp.login(self.email, self.password)
                 smtp.send_message(msg)
 
             # Guardar en la base de datos
             self.dao.save_sent_email(self.email, recipient, subject, body, attachment_path)
+
+            # Emitir señal para actualizar la UI
             self.update_sent_signal.emit(self.dao.fetch_sent_emails())
         except Exception as e:
             print(f"[ERROR] Error al enviar correo: {e}")
