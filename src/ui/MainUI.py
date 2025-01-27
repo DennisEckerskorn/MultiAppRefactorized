@@ -194,6 +194,11 @@ class MainUI(QMainWindow):
                 self.scrapping_tab.controller.stop_scraping()
                 print("[DEBUG] Hilo de ScrappingTab detenido.")
 
+            # Detener el RadioPlayer
+            if hasattr(self, "radio_player"):
+                self.radio_player.stop()
+                print("[DEBUG] Hilo de la reproducción de RadioPlayer detenida.")
+
             # Detener tareas del EmailController
             if hasattr(self.email_controller, "task_manager"):
                 if self.email_controller.task_manager.fetch_task.is_running():
