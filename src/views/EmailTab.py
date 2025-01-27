@@ -10,8 +10,9 @@ class EmailTab(QWidget):
     def __init__(self, email_controller: EmailController):
         super().__init__()
         self.controller = email_controller
+        self.is_message_box_open = False
         self.init_ui()
-        self.auto_update_timer = QTimer()  # Temporizador para actualizaciones automáticas
+        self.auto_update_timer = QTimer()
 
         # Conectar señales del controlador con la interfaz
         self.controller.update_received_signal.connect(self.display_received_emails)
@@ -20,7 +21,7 @@ class EmailTab(QWidget):
 
         # Configurar la actualización automática
         self.auto_update_timer.timeout.connect(self.fetch_emails)
-        self.auto_update_timer.start(60000)  # Cada 1 minuto
+        self.auto_update_timer.start(60000)
 
         # Mostrar correos almacenados al cargar la pestaña
         self.display_received_emails(self.controller.dao.fetch_received_emails())
@@ -30,13 +31,11 @@ class EmailTab(QWidget):
         """Inicializa la interfaz gráfica de la pestaña."""
         layout = QVBoxLayout(self)
 
-        # Título
         title_label = QLabel("Gestión de Correos")
         title_label.setAlignment(Qt.AlignCenter)
         title_label.setStyleSheet("font-size: 18px; font-weight: bold;")
         layout.addWidget(title_label)
 
-        # Botones de acción
         button_layout = QHBoxLayout()
         self.fetch_button = QPushButton("Descargar Correos")
         self.send_button = QPushButton("Redactar Correo")
@@ -47,14 +46,12 @@ class EmailTab(QWidget):
         button_layout.addWidget(self.send_button)
         layout.addLayout(button_layout)
 
-        # Lista de correos recibidos
         self.received_label = QLabel("Correos Recibidos:")
         layout.addWidget(self.received_label)
         self.received_list = QListWidget()
         self.received_list.itemClicked.connect(self.view_received_email)
         layout.addWidget(self.received_list)
 
-        # Lista de correos enviados
         self.sent_label = QLabel("Correos Enviados:")
         layout.addWidget(self.sent_label)
         self.sent_list = QListWidget()
@@ -64,10 +61,8 @@ class EmailTab(QWidget):
     def fetch_emails(self):
         """Inicia la descarga de correos."""
         if not self.controller.task_manager.fetch_task.is_running():
-            self.fetch_button.setEnabled(False)  # Deshabilitar botón mientras se descarga
+            self.fetch_button.setEnabled(False)
             self.controller.fetch_email_async()
-        else:
-            print("[INFO] La tarea de descarga ya está en ejecución.")
 
     def compose_email(self):
         """Abre un diálogo para redactar y enviar un correo."""
@@ -110,12 +105,10 @@ class EmailTab(QWidget):
 
     def on_task_finished(self, task_name):
         """Maneja la finalización de tareas asincrónicas."""
-        self.fetch_button.setEnabled(True)  # Reactivar botón "Descargar Correos"
+        self.fetch_button.setEnabled(True)
         if task_name == "fetch_emails":
-            # Actualizar la lista de correos recibidos después de descargar
             self.display_received_emails(self.controller.dao.fetch_received_emails())
             QMessageBox.information(self, "Descarga Completa", "La descarga de correos ha finalizado.")
         elif task_name == "send_email":
-            # Actualizar la lista de correos enviados después de enviar
             self.display_sent_emails(self.controller.dao.fetch_sent_emails())
             QMessageBox.information(self, "Envío Completo", "El correo ha sido enviado correctamente.")

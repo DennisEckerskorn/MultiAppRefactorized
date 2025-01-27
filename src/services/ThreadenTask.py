@@ -30,7 +30,8 @@ class ThreadenTask:
         """Detiene el hilo."""
         self.running = False
         if self.thread and self.thread.is_alive():
-            self.thread.join(timeout=1)
+            if threading.current_thread() != self.thread:  # Evita `join` desde el mismo hilo
+                self.thread.join(timeout=1)
 
     def is_running(self):
         """Devuelve si el hilo está en ejecución."""

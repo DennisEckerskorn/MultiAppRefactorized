@@ -28,11 +28,17 @@ class EmailController(QObject):
 
     def fetch_email_async(self):
         """Inicia la descarga de correos en un hilo."""
-        self.task_manager.start_fetch()
+        if not self.task_manager.fetch_task.is_running():
+            self.task_manager.start_fetch()
+        else:
+            print("[INFO] La tarea de descarga ya está en ejecución.")
 
     def send_email_async(self, recipient, subject, body, attachment_path=None):
-        """Inicia el envío de un correo en un hilo."""
-        self.task_manager.start_send(recipient, subject, body, attachment_path)
+        """Envía correos en un hilo separado."""
+        if not self.task_manager.send_task.is_running():
+            self.task_manager.send_task.start(self._send_email, recipient, subject, body, attachment_path)
+        else:
+            print("[INFO] La tarea de envío de correos ya está en ejecución.")
 
     def _fetch_emails(self):
         """Lógica de obtención de correos."""
@@ -61,6 +67,7 @@ class EmailController(QObject):
         except Exception as e:
             print(f"[ERROR] Error al recibir correos: {e}")
         finally:
+            self.task_manager.fetch_task.stop()
             self.task_finished_signal.emit("fetch_emails")
 
     def _send_email(self, recipient, subject, body, attachment_path=None):
@@ -90,4 +97,5 @@ class EmailController(QObject):
         except Exception as e:
             print(f"[ERROR] Error al enviar correo: {e}")
         finally:
+            self.task_manager.send_task.stop()
             self.task_finished_signal.emit("send_email")
