@@ -73,7 +73,7 @@ class EmailTab(QWidget):
         """Actualiza la lista de correos recibidos en la interfaz."""
         self.received_list.clear()
         for email in emails:
-            item = QListWidgetItem(email["subject"])
+            item = QListWidgetItem(email.subject)
             item.setData(Qt.UserRole, email)
             self.received_list.addItem(item)
 
@@ -81,7 +81,7 @@ class EmailTab(QWidget):
         """Actualiza la lista de correos enviados en la interfaz."""
         self.sent_list.clear()
         for email in emails:
-            item = QListWidgetItem(email["subject"])
+            item = QListWidgetItem(email.subject)
             item.setData(Qt.UserRole, email)
             self.sent_list.addItem(item)
 
@@ -90,8 +90,8 @@ class EmailTab(QWidget):
         email_data = item.data(Qt.UserRole)
         QMessageBox.information(
             self,
-            f"Correo de {email_data['sender']}",
-            f"Asunto: {email_data['subject']}\n\n{email_data['body']}"
+            f"Correo de {email_data.sender}",
+            f"Asunto: {email_data.subject}\n\n{email_data.body}"
         )
 
     def view_sent_email(self, item):
@@ -99,8 +99,8 @@ class EmailTab(QWidget):
         email_data = item.data(Qt.UserRole)
         QMessageBox.information(
             self,
-            f"Correo a {email_data['recipient']}",
-            f"Asunto: {email_data['subject']}\n\n{email_data['body']}"
+            f"Correo a {email_data.recipient}",
+            f"Asunto: {email_data.subject}\n\n{email_data.body}"
         )
 
     def on_task_finished(self, task_name):

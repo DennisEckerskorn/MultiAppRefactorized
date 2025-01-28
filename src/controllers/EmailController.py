@@ -5,6 +5,8 @@ from email.message import EmailMessage
 from email.parser import BytesParser
 from email.policy import default
 from src.dao.EmailDao import EmailDao
+from src.entities.mail.ReceivedMail import ReceivedMail
+from src.entities.mail.SentMail import SentMail
 from src.managers.EmailTaskManager import EmailTaskManager
 
 
@@ -52,13 +54,16 @@ class EmailController(QObject):
                 response, lines, octets = pop_conn.retr(i)
                 message = BytesParser(policy=default).parsebytes(b"\n".join(lines))
 
-                sender = message["From"]
-                subject = message["Subject"]
-                body = message.get_body(preferencelist=("plain",)).get_content()
-                message_id = message["Message-ID"]
+                email = ReceivedMail(
+                    sender=message["From"],
+                    recipient=self.email,
+                    subject=message["Subject"],
+                    body=message.get_body(preferencelist=("plain",)).get_content(),
+                    message_id=message["Message-ID"]
+                )
 
                 # Guardar en la base de datos si no existe
-                self.dao.save_email(sender, self.email, subject, body, message_id)
+                self.dao.save_received_mail(email)
 
             pop_conn.quit()
 
@@ -89,8 +94,16 @@ class EmailController(QObject):
                 smtp.login(self.email, self.password)
                 smtp.send_message(msg)
 
+            email = SentMail(
+                sender=self.email,
+                recipient=recipient,
+                subject=subject,
+                body=body,
+                attachment_path=attachment_path
+            )
+
             # Guardar en la base de datos
-            self.dao.save_sent_email(self.email, recipient, subject, body, attachment_path)
+            self.dao.save_sent_mail(email)
 
             # Emitir señal para actualizar la UI
             self.update_sent_signal.emit(self.dao.fetch_sent_emails())

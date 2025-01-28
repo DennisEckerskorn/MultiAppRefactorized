@@ -1,5 +1,7 @@
 import sqlite3
 from src.dao.utils.DatabaseConnection import DatabaseConnection
+from src.entities.mail.ReceivedMail import ReceivedMail
+from src.entities.mail.SentMail import SentMail
 
 
 class EmailDao:
@@ -55,24 +57,25 @@ class EmailDao:
         finally:
             cursor.close()
 
-    def save_email(self, sender, recipient, subject, body, message_id):
+    def save_received_mail(self, email: ReceivedMail):
         """Guarda un correo recibido en la base de datos si no existe."""
-        if not self.email_exists(message_id):
+        if not self.email_exists(email.message_id):
             insert_query = """
             INSERT INTO received_emails (sender, recipient, subject, body, message_id)
             VALUES (?, ?, ?, ?, ?);
             """
             cursor = self.connection.cursor()
             try:
-                cursor.execute(insert_query, (sender, recipient, subject, body, message_id))
+                cursor.execute(insert_query,
+                               (email.sender, email.recipient, email.subject, email.body, email.message_id))
                 self.connection.commit()
-                print(f"[INFO] Correo recibido guardado: {subject}")
+                print(f"[INFO] Correo recibido guardado: {email.subject}")
             except sqlite3.Error as e:
                 print(f"[ERROR] Error al guardar el correo recibido: {e}")
             finally:
                 cursor.close()
 
-    def save_sent_email(self, sender, recipient, subject, body, attachment_path=None):
+    def save_sent_mail(self, email: SentMail):
         """Guarda un correo enviado en la base de datos."""
         insert_query = """
         INSERT INTO sent_emails (sender, recipient, subject, body, attachment_path)
@@ -80,9 +83,11 @@ class EmailDao:
         """
         cursor = self.connection.cursor()
         try:
-            cursor.execute(insert_query, (sender, recipient, subject, body, attachment_path))
+            cursor.execute(insert_query, (
+                email.sender, email.recipient, email.subject, email.body, email.attachment_path
+            ))
             self.connection.commit()
-            print(f"[INFO] Correo enviado guardado: {subject}")
+            print(f"[INFO] Correo enviado guardado: {email.subject}")
         except sqlite3.Error as e:
             print(f"[ERROR] Error al guardar el correo enviado: {e}")
         finally:
@@ -91,7 +96,7 @@ class EmailDao:
     def fetch_received_emails(self):
         """Recupera todos los correos recibidos desde la base de datos."""
         select_query = """
-        SELECT sender, recipient, subject, body, received_at 
+        SELECT id, sender, recipient, subject, body, message_id, received_at 
         FROM received_emails 
         ORDER BY received_at DESC;
         """
@@ -100,11 +105,19 @@ class EmailDao:
             cursor.execute(select_query)
             rows = cursor.fetchall()
             return [
-                {"sender": row[0], "recipient": row[1], "subject": row[2], "body": row[3], "received_at": row[4]}
+                ReceivedMail(
+                    id=row[0],
+                    sender=row[1],
+                    recipient=row[2],
+                    subject=row[3],
+                    body=row[4],
+                    message_id=row[5],
+                    received_at=row[6]
+                )
                 for row in rows
             ]
         except sqlite3.Error as e:
-            print(f"[ERROR] Error al recuperar los correos recibidos: {e}")
+            print(f"[ERROR] Error al recuperar correos recibidos: {e}")
             return []
         finally:
             cursor.close()
@@ -112,7 +125,7 @@ class EmailDao:
     def fetch_sent_emails(self):
         """Recupera todos los correos enviados desde la base de datos."""
         select_query = """
-        SELECT sender, recipient, subject, body, attachment_path, sent_at 
+        SELECT id, sender, recipient, subject, body, attachment_path, sent_at 
         FROM sent_emails 
         ORDER BY sent_at DESC;
         """
@@ -121,18 +134,19 @@ class EmailDao:
             cursor.execute(select_query)
             rows = cursor.fetchall()
             return [
-                {
-                    "sender": row[0],
-                    "recipient": row[1],
-                    "subject": row[2],
-                    "body": row[3],
-                    "attachment_path": row[4],
-                    "sent_at": row[5],
-                }
+                SentMail(
+                    id=row[0],
+                    sender=row[1],
+                    recipient=row[2],
+                    subject=row[3],
+                    body=row[4],
+                    attachment_path=row[5],
+                    sent_at=row[6]
+                )
                 for row in rows
             ]
         except sqlite3.Error as e:
-            print(f"[ERROR] Error al recuperar los correos enviados: {e}")
+            print(f"[ERROR] Error al recuperar correos enviados: {e}")
             return []
         finally:
             cursor.close()
