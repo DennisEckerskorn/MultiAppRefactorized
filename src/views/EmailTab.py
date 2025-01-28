@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QListWidget, QMessageBox, QListWidgetItem
+    QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QTableWidget, QTableWidgetItem, QMessageBox
 )
 from PySide6.QtCore import Qt, QTimer
 from src.controllers.EmailController import EmailController
@@ -31,11 +31,13 @@ class EmailTab(QWidget):
         """Inicializa la interfaz gráfica de la pestaña."""
         layout = QVBoxLayout(self)
 
+        # Título
         title_label = QLabel("Gestión de Correos")
         title_label.setAlignment(Qt.AlignCenter)
         title_label.setStyleSheet("font-size: 18px; font-weight: bold;")
         layout.addWidget(title_label)
 
+        # Botones
         button_layout = QHBoxLayout()
         self.fetch_button = QPushButton("Descargar Correos")
         self.send_button = QPushButton("Redactar Correo")
@@ -46,17 +48,23 @@ class EmailTab(QWidget):
         button_layout.addWidget(self.send_button)
         layout.addLayout(button_layout)
 
+        # Tabla de correos recibidos
         self.received_label = QLabel("Correos Recibidos:")
         layout.addWidget(self.received_label)
-        self.received_list = QListWidget()
-        self.received_list.itemClicked.connect(self.view_received_email)
-        layout.addWidget(self.received_list)
+        self.received_table = QTableWidget(0, 2)
+        self.received_table.setHorizontalHeaderLabels(["Remitente", "Asunto"])
+        self.received_table.setSelectionBehavior(QTableWidget.SelectRows)
+        self.received_table.cellDoubleClicked.connect(self.view_received_email)
+        layout.addWidget(self.received_table)
 
+        # Tabla de correos enviados
         self.sent_label = QLabel("Correos Enviados:")
         layout.addWidget(self.sent_label)
-        self.sent_list = QListWidget()
-        self.sent_list.itemClicked.connect(self.view_sent_email)
-        layout.addWidget(self.sent_list)
+        self.sent_table = QTableWidget(0, 2)
+        self.sent_table.setHorizontalHeaderLabels(["Destinatario", "Asunto"])
+        self.sent_table.setSelectionBehavior(QTableWidget.SelectRows)
+        self.sent_table.cellDoubleClicked.connect(self.view_sent_email)
+        layout.addWidget(self.sent_table)
 
     def fetch_emails(self):
         """Inicia la descarga de correos."""
@@ -70,37 +78,39 @@ class EmailTab(QWidget):
         dialog.exec()
 
     def display_received_emails(self, emails):
-        """Actualiza la lista de correos recibidos en la interfaz."""
-        self.received_list.clear()
+        """Actualiza la tabla de correos recibidos."""
+        self.received_table.setRowCount(0)
         for email in emails:
-            item = QListWidgetItem(email.subject)
-            item.setData(Qt.UserRole, email)
-            self.received_list.addItem(item)
+            row = self.received_table.rowCount()
+            self.received_table.insertRow(row)
+            self.received_table.setItem(row, 0, QTableWidgetItem(email.sender))
+            self.received_table.setItem(row, 1, QTableWidgetItem(email.subject))
 
     def display_sent_emails(self, emails):
-        """Actualiza la lista de correos enviados en la interfaz."""
-        self.sent_list.clear()
+        """Actualiza la tabla de correos enviados."""
+        self.sent_table.setRowCount(0)
         for email in emails:
-            item = QListWidgetItem(email.subject)
-            item.setData(Qt.UserRole, email)
-            self.sent_list.addItem(item)
+            row = self.sent_table.rowCount()
+            self.sent_table.insertRow(row)
+            self.sent_table.setItem(row, 0, QTableWidgetItem(email.recipient))
+            self.sent_table.setItem(row, 1, QTableWidgetItem(email.subject))
 
-    def view_received_email(self, item):
+    def view_received_email(self, row, column):
         """Muestra el contenido de un correo recibido seleccionado."""
-        email_data = item.data(Qt.UserRole)
+        email = self.controller.dao.fetch_received_emails()[row]
         QMessageBox.information(
             self,
-            f"Correo de {email_data.sender}",
-            f"Asunto: {email_data.subject}\n\n{email_data.body}"
+            f"Correo de {email.sender}",
+            f"Asunto: {email.subject}\n\n{email.body}"
         )
 
-    def view_sent_email(self, item):
+    def view_sent_email(self, row, column):
         """Muestra el contenido de un correo enviado seleccionado."""
-        email_data = item.data(Qt.UserRole)
+        email = self.controller.dao.fetch_sent_emails()[row]
         QMessageBox.information(
             self,
-            f"Correo a {email_data.recipient}",
-            f"Asunto: {email_data.subject}\n\n{email_data.body}"
+            f"Correo a {email.recipient}",
+            f"Asunto: {email.subject}\n\n{email.body}"
         )
 
     def on_task_finished(self, task_name):
