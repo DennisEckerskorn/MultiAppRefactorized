@@ -1,9 +1,7 @@
 import sqlite3
 
-from nbclient.client import timestamp
-
 from src.dao.utils.DatabaseConnection import DatabaseConnection
-from src.entities.chat import ChatMessage
+from src.entities.chat.ChatMessage import ChatMessage
 
 
 class ChatDAO:
