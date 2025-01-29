@@ -12,6 +12,8 @@ from src.managers.ThreadsManager import ThreadsManager
 from src.managers.ProcessesManager import ProcessManager
 from src.services.ThreadenTask import ThreadenTask
 from src.services.RadioPlayer import RadioPlayer
+from src.controllers.ChatController import ChatController
+from src.views.ChatTab import ChatTab
 
 
 class MainUI(QMainWindow):
@@ -30,6 +32,9 @@ class MainUI(QMainWindow):
             email="dennis@psp.ieslamar.org",
             password="1234"
         )
+
+        # Inicializar el controlador de chat:
+        self.chat_controller = ChatController(server_ip="192.168.120.106", server_port=3333)
 
         # Hilos para las pestañas
         self.tab_threads = {
@@ -69,12 +74,14 @@ class MainUI(QMainWindow):
         self.game_tab = GameTab(controller=self.game_controller)
         self.scrapping_tab = ScrappingTab()
         self.email_tab = EmailTab(email_controller=self.email_controller)
+        self.chat_tab = ChatTab(chat_controller=self.chat_controller)
 
         self.tabs.addTab(self.radio_tab, "Radio")
         self.tabs.addTab(self.system_tab, "Sistema")
         self.tabs.addTab(self.game_tab, "Juego")
         self.tabs.addTab(self.scrapping_tab, "Scrapping")
         self.tabs.addTab(self.email_tab, "Correo")
+        self.tabs.addTab(self.chat_tab, "Chat")
 
         self.tab_threads["system_tab"].start(self.system_tab.controller.start)
 
@@ -101,6 +108,7 @@ class MainUI(QMainWindow):
             ("Juego", lambda: self.tabs.setCurrentWidget(self.game_tab)),
             ("Scrapping", lambda: self.tabs.setCurrentWidget(self.scrapping_tab)),
             ("Correo", lambda: self.tabs.setCurrentWidget(self.email_tab)),
+            ("Chat", lambda: self.tabs.setCurrentWidget(self.chat_tab)),
         ]
         for text, command in tabs_buttons:
             button = QPushButton(text)
