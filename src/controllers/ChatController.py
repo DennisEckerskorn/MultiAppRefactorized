@@ -1,4 +1,6 @@
 import socket
+import threading
+
 from PySide6.QtCore import QObject, Signal
 from src.services.ThreadenTask import ThreadenTask
 from src.dao.ChatDAO import ChatDAO
@@ -22,8 +24,13 @@ class ChatController(QObject):
     def connect_to_server(self):
         """Conecta al servidor de chat"""
         try:
+            if self.socket:
+                self.disconnect_from_server()
+
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.socket.settimeout(5)
             self.socket.connect((self.server_ip, self.server_port))
+            self.socket.settimeout(None)
             self.running = True
             self.receive_task.start(self.receive_message)
             self.connection_status_signal.emit(True)
@@ -31,6 +38,7 @@ class ChatController(QObject):
         except Exception as e:
             print(f"[ERROR] Error conectando al servidor de chat: {e}")
             self.connection_status_signal.emit(False)
+            threading.Timer(5.0, self.connect_to_server).start()
 
     def disconnect_from_server(self):
         """Desconecta del servidor de chat"""
