@@ -27,14 +27,20 @@ class MainUI(QMainWindow):
         self.process_manager = ProcessManager(self)
         self.radio_player = RadioPlayer()
         self.email_controller = EmailController(
-            pop_server="192.168.120.103",
-            smtp_server="192.168.120.103",
-            email="dennis@psp.ieslamar.org",
-            password="1234"
+            pop_server="s1.ieslamar.org",
+            smtp_server="s1.ieslamar.org",
+            email="dennis@fp.ieslamar.org",
+            password=""
+                     """
+                     pop_server="192.168.120.103",
+                     smtp_server="192.168.120.103",
+                     email="dennis@psp.ieslamar.org",
+                     password=""
+                     """
         )
 
         # Inicializar el controlador de chat:
-        self.chat_controller = ChatController(server_ip="192.168.120.106", server_port=3333)
+        self.chat_controller = ChatController(server_ip="127.0.0.1", server_port=3333)
 
         # Hilos para las pestañas
         self.tab_threads = {
@@ -215,6 +221,15 @@ class MainUI(QMainWindow):
                 if self.email_controller.task_manager.send_task.is_running():
                     self.email_controller.task_manager.send_task.stop()
                     print("[DEBUG] Hilo de envío de correos detenido.")
+
+            self.chat_controller.disconnect_from_server()
+            if hasattr(self.chat_controller, "chat_controller"):
+                if self.chat_controller.receive_task.is_running():
+                    self.chat_controller.receive_task.stop()
+                    print("[DEBUG] Hilo del envio de chat detenido.")
+                if self.chat_controller.users_task.is_running():
+                    self.chat_controller.users_task.stop()
+                    print("[DEBUG] Hilo de obtención de usuarios detenido.")
 
         except Exception as e:
             print(f"[ERROR] Error al cerrar hilos: {e}")

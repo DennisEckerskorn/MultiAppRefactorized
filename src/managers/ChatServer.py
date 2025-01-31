@@ -3,11 +3,11 @@ import threading
 
 
 class ChatServer:
-    def __init__(self, host='0.0.0.0', port=3333):
+    def __init__(self, host='127.0.0.1', port=3333):
         self.host = host
         self.port = port
         self.server = None
-        self.clients = []
+        self.clients = {}
         self.running = False
 
     def start_server(self):
@@ -28,13 +28,17 @@ class ChatServer:
                 client_socket, client_address = self.server.accept()
                 self.clients.append(client_socket)
                 print(f"[CONECTADO] Nueva conexión desde {client_address}")
-                # Manejar al cliente en un hilo separado
-                threading.Thread(target=self.handle_client, args=(client_socket, client_address), daemon=True).start()
+                threading.Thread(target=self.handle_client, args=(client_socket,), daemon=True).start()
+            except OSError:
+                # Esto ocurre cuando el socket se cierra mientras espera conexiones
+                print("[INFO] El servidor ha sido detenido.")
+                break
             except Exception as e:
                 print(f"[ERROR] Error aceptando clientes: {e}")
 
-    def handle_client(self, client_socket, client_address):
+    def handle_client(self, client_socket):
         """Maneja la comunicación con un cliente"""
+        client_address = client_socket.getpeername()  # Obtener la dirección del cliente
         print(f"[NUEVO CLIENTE] {client_address} conectado.")
         while self.running:
             try:
@@ -51,20 +55,20 @@ class ChatServer:
 
     def broadcast(self, message, sender_socket):
         """Retransmite un mensaje a todos los clientes conectados"""
-        for client in self.clients:
+        for client in self.clients.keys():
             if client != sender_socket:
                 try:
                     client.send(message)
                 except Exception as e:
                     print(f"[ERROR] No se pudo enviar el mensaje: {e}")
-                    self.clients.remove(client)
+                    self.clients.pop(client, None)
 
     def stop_server(self):
         """Detiene el servidor y cierra todas las conexiones"""
         self.running = False
         if self.server:
             self.server.close()
-        for client in self.clients:
+        for client in self.clients.keys():
             client.close()
-        self.clients = []
+        self.clients = {}
         print("[INFO] Servidor detenido")

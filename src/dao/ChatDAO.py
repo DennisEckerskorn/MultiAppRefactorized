@@ -8,6 +8,7 @@ class ChatDAO:
     def __init__(self):
         """Inicializa el DAO de chat y crea la tabla en la base de datos"""
         self.connection = DatabaseConnection().get_connection()
+        self.connection.row_factory = sqlite3.Row  # Configurar para devolver filas como diccionarios
         self._create_table()
 
     def _create_table(self):
