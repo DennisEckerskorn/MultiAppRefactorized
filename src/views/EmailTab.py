@@ -79,21 +79,28 @@ class EmailTab(QWidget):
 
     def display_received_emails(self, emails):
         """Actualiza la tabla de correos recibidos."""
-        self.received_table.setRowCount(0)
+        self.received_table.setColumnCount(4)
+        self.received_table.setHorizontalHeaderLabels(["Remitente", "Asunto", "Leído", "Fecha / Hora"])
         for email in emails:
             row = self.received_table.rowCount()
             self.received_table.insertRow(row)
             self.received_table.setItem(row, 0, QTableWidgetItem(email.sender))
             self.received_table.setItem(row, 1, QTableWidgetItem(email.subject))
+            self.received_table.setItem(row, 2, QTableWidgetItem("Sí" if email.read else "No"))
+            self.received_table.setItem(row, 3, QTableWidgetItem(email.date))
+        self.received_table.resizeColumnsToContents()
 
     def display_sent_emails(self, emails):
         """Actualiza la tabla de correos enviados."""
-        self.sent_table.setRowCount(0)
+        self.sent_table.setColumnCount(3)
+        self.sent_table.setHorizontalHeaderLabels(["Remitente", "Asunto", "Fecha / Hora"])
         for email in emails:
             row = self.sent_table.rowCount()
             self.sent_table.insertRow(row)
             self.sent_table.setItem(row, 0, QTableWidgetItem(email.recipient))
             self.sent_table.setItem(row, 1, QTableWidgetItem(email.subject))
+            self.sent_table.setItem(row, 2, QTableWidgetItem(email.date))
+        self.sent_table.resizeColumnsToContents()
 
     def view_received_email(self, row, column):
         """Muestra el contenido de un correo recibido seleccionado."""
@@ -104,6 +111,7 @@ class EmailTab(QWidget):
             f"Correo de {email.sender}",
             f"Asunto: {email.subject}\n\n{email.body}"
         )
+        self.display_received_emails(self.controller.dao.fetch_received_emails())
 
     def view_sent_email(self, row, column):
         """Muestra el contenido de un correo enviado seleccionado."""

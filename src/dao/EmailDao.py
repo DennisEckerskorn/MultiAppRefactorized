@@ -12,6 +12,7 @@ class EmailDao:
 
     def _create_tables(self):
         """Crea las tablas necesarias para almacenar correos electrónicos si no existen."""
+        #drop_table_query = """DROP TABLE IF EXISTS received_emails;"""
         create_received_table_query = """
         CREATE TABLE IF NOT EXISTS received_emails (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -37,6 +38,7 @@ class EmailDao:
         """
         cursor = self.connection.cursor()
         try:
+            #cursor.execute(drop_table_query)
             cursor.execute(create_received_table_query)
             cursor.execute(create_sent_table_query)
             self.connection.commit()

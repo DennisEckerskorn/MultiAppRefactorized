@@ -62,8 +62,11 @@ class EmailController(QObject):
                     message_id=message["Message-ID"]
                 )
 
-                # Guardar en la base de datos si no existe
-                self.dao.save_received_mail(email)
+                if not self.dao.email_exists(email.message_id):
+                    self.dao.save_received_mail(email)
+                    print(f"[INFO] Correo nuevo guardado: {email.subject}")
+                else:
+                    print(f"[INFO] Correo ya existente: {email.subject}")
 
             pop_conn.quit()
 
