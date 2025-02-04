@@ -27,16 +27,18 @@ class MainUI(QMainWindow):
         self.process_manager = ProcessManager(self)
         self.radio_player = RadioPlayer()
         self.email_controller = EmailController(
-            pop_server="s1.ieslamar.org",
-            smtp_server="s1.ieslamar.org",
-            email="dennis@fp.ieslamar.org",
-            password=""
-                     """
-                     pop_server="192.168.120.103",
-                     smtp_server="192.168.120.103",
-                     email="dennis@psp.ieslamar.org",
-                     password=""
-                     """
+            pop_server="192.168.120.103",
+            smtp_server="192.168.120.103",
+            email="dennis@psp.ieslamar.org",
+            password="1234"
+            """
+                pop_server="s1.ieslamar.org",
+                smtp_server="s1.ieslamar.org",
+                email="dennis@fp.ieslamar.org",
+                password=""
+            """
+
+
         )
 
         # Inicializar el controlador de chat:

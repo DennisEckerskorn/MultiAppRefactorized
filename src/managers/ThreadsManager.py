@@ -110,7 +110,11 @@ class ThreadsManager:
         task_name = "emails"
         while self.global_tasks.get(task_name) and self.global_tasks[task_name].is_running():
             try:
-                unread_count = 5  # Simula una consulta real
+                ui_instance.email_controller.fetch_email_async()
+
+                received_emails = ui_instance.email_controller.dao.fetch_received_emails()
+                unread_count = len([email for email in received_emails if not email.read])
+
                 ui_instance.update_status_data({"emails": unread_count})
             except Exception as e:
                 print(f"[DEBUG] Error en el hilo de correos: {e}")

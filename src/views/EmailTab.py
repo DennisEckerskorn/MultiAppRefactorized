@@ -98,6 +98,7 @@ class EmailTab(QWidget):
     def view_received_email(self, row, column):
         """Muestra el contenido de un correo recibido seleccionado."""
         email = self.controller.dao.fetch_received_emails()[row]
+        self.controller.dao.mark_email_as_read(email.message_id)
         QMessageBox.information(
             self,
             f"Correo de {email.sender}",

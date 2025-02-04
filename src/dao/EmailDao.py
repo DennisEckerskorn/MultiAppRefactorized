@@ -20,7 +20,8 @@ class EmailDao:
             subject TEXT,
             body TEXT,
             message_id TEXT UNIQUE NOT NULL,
-            received_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            received_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            read BOOLEAN DEFAULT 0
         );
         """
         create_sent_table_query = """
@@ -96,7 +97,7 @@ class EmailDao:
     def fetch_received_emails(self):
         """Recupera todos los correos recibidos desde la base de datos."""
         select_query = """
-        SELECT id, sender, recipient, subject, body, message_id, received_at 
+        SELECT id, sender, recipient, subject, body, message_id, received_at, read 
         FROM received_emails 
         ORDER BY received_at DESC;
         """
@@ -112,7 +113,8 @@ class EmailDao:
                     subject=row[3],
                     body=row[4],
                     message_id=row[5],
-                    received_at=row[6]
+                    received_at=row[6],
+                    read=bool(row[7])
                 )
                 for row in rows
             ]
@@ -148,5 +150,17 @@ class EmailDao:
         except sqlite3.Error as e:
             print(f"[ERROR] Error al recuperar correos enviados: {e}")
             return []
+        finally:
+            cursor.close()
+
+    def mark_email_as_read(self, message_id):
+        """Marcar un correo como leído en la base de datos"""
+        query = "UPDATE received_emails SET read = 1 WHERE message_id = ?"
+        cursor = self.connection.cursor()
+        try:
+            cursor.execute(query, (message_id,))
+            self.connection.commit()
+        except sqlite3.Error as e:
+            print(f"[ERROR] Error al marcar correo como leido: {e}")
         finally:
             cursor.close()
