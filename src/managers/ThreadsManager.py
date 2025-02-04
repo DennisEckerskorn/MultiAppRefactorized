@@ -106,16 +106,17 @@ class ThreadsManager:
             return None
 
     def update_emails(self, ui_instance):
-        """Actualiza la cantidad de correos no leídos cada minuto."""
+        """Actualiza la cantidad de correos en la base de datos cada minuto."""
         task_name = "emails"
         while self.global_tasks.get(task_name) and self.global_tasks[task_name].is_running():
             try:
-                #ui_instance.email_controller.fetch_email_async()
-
+                # Obtener el total de correos y los no leídos desde la base de datos
                 received_emails = ui_instance.email_controller.dao.fetch_received_emails()
+                total_count = len(received_emails)
                 unread_count = len([email for email in received_emails if not email.read])
 
-                ui_instance.update_status_data({"emails": unread_count})
+                # Actualizar la barra de estado con el total y los no leídos
+                ui_instance.update_status_data({"emails": f"{unread_count}/{total_count}"})
             except Exception as e:
                 print(f"[DEBUG] Error en el hilo de correos: {e}")
             for _ in range(60):

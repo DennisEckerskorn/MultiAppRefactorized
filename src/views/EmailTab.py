@@ -7,9 +7,10 @@ from src.views.ComposeEmailDialog import ComposeEmailDialog
 
 
 class EmailTab(QWidget):
-    def __init__(self, email_controller: EmailController):
+    def __init__(self, email_controller: EmailController, main_window):
         super().__init__()
         self.controller = email_controller
+        self.main_window = main_window
         self.is_message_box_open = False
         self.init_ui()
         self.auto_update_timer = QTimer()
@@ -20,7 +21,7 @@ class EmailTab(QWidget):
         self.controller.task_finished_signal.connect(self.on_task_finished)
 
         # Configurar la actualización automática
-        self.auto_update_timer.timeout.connect(self.fetch_emails)
+        self.auto_update_timer.timeout.connect(lambda: self.fetch_emails(manual=False))
         self.auto_update_timer.start(60000)
 
         # Mostrar correos almacenados al cargar la pestaña
@@ -66,11 +67,11 @@ class EmailTab(QWidget):
         self.sent_table.cellDoubleClicked.connect(self.view_sent_email)
         layout.addWidget(self.sent_table)
 
-    def fetch_emails(self):
+    def fetch_emails(self, manual=True):
         """Inicia la descarga de correos."""
         if not self.controller.task_manager.fetch_task.is_running():
             self.fetch_button.setEnabled(False)
-            self.controller.fetch_email_async()
+            self.controller.fetch_email_async(manual=manual)
 
     def compose_email(self):
         """Abre un diálogo para redactar y enviar un correo."""
@@ -79,6 +80,7 @@ class EmailTab(QWidget):
 
     def display_received_emails(self, emails):
         """Actualiza la tabla de correos recibidos."""
+        self.received_table.setRowCount(0)
         self.received_table.setColumnCount(4)
         self.received_table.setHorizontalHeaderLabels(["Remitente", "Asunto", "Leído", "Fecha / Hora"])
         for email in emails:
@@ -92,6 +94,7 @@ class EmailTab(QWidget):
 
     def display_sent_emails(self, emails):
         """Actualiza la tabla de correos enviados."""
+        self.sent_table.setRowCount(0)
         self.sent_table.setColumnCount(3)
         self.sent_table.setHorizontalHeaderLabels(["Remitente", "Asunto", "Fecha / Hora"])
         for email in emails:
@@ -131,3 +134,7 @@ class EmailTab(QWidget):
         elif task_name == "send_email":
             self.display_sent_emails(self.controller.dao.fetch_sent_emails())
             QMessageBox.information(self, "Envío Completo", "El correo ha sido enviado correctamente.")
+        elif task_name == "fetch_emails_auto":
+            self.display_received_emails(self.controller.dao.fetch_received_emails())
+            # Mostrar mensaje en la barra de estado
+            self.main_window.status_bar.showMessage("Descarga automática de correos completada.", 5000)

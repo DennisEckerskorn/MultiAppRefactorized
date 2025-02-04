@@ -28,10 +28,10 @@ class EmailController(QObject):
         # Inicializa el administrador de tareas
         self.task_manager = EmailTaskManager(self)
 
-    def fetch_email_async(self):
+    def fetch_email_async(self, manual=True):
         """Inicia la descarga de correos en un hilo."""
         if not self.task_manager.fetch_task.is_running():
-            self.task_manager.start_fetch()
+            self.task_manager.start_fetch(manual=manual)
         else:
             print("[INFO] La tarea de descarga ya está en ejecución.")
 
@@ -42,8 +42,9 @@ class EmailController(QObject):
         else:
             print("[INFO] La tarea de envío de correos ya está en ejecución.")
 
-    def _fetch_emails(self):
+    def _fetch_emails(self, manual):
         """Lógica de obtención de correos."""
+        pop_conn = None
         try:
             # Usar POP3_SSL si el servidor requiere SSL
             if self.pop_port == 995:
@@ -51,8 +52,8 @@ class EmailController(QObject):
             else:
                 pop_conn = poplib.POP3(self.pop_server, self.pop_port)
 
-            # Habilitar depuración para ver los comandos enviados y las respuestas del servidor
-            pop_conn.set_debuglevel(2)
+            # Habilitar depuración (ajustar para producción)
+            pop_conn.set_debuglevel(0)
 
             # Autenticación
             pop_conn.user(self.email)
@@ -69,18 +70,23 @@ class EmailController(QObject):
                     message = BytesParser(policy=default).parsebytes(b"\n".join(lines))
 
                     # Crear objeto ReceivedMail
+                    body = message.get_body(preferencelist=("plain",))
+                    email_body = body.get_content() if body else "Sin contenido"
                     email = ReceivedMail(
                         sender=message["From"],
                         recipient=self.email,
                         subject=message["Subject"],
                         body=message.get_body(preferencelist=("plain",)).get_content(),
-                        message_id=message["Message-ID"]
+                        message_id=message["Message-ID"] if message["Message-ID"] else f"generated-{i}"
                     )
 
                     # Guardar el correo en la base de datos si no existe
                     if not self.dao.email_exists(email.message_id):
-                        self.dao.save_received_mail(email)
-                        print(f"[INFO] Correo nuevo guardado: {email.subject}")
+                        if self.dao.save_received_mail(email):
+                            pop_conn.dele(i)
+                            print(f"[INFO] Correo eliminado del servidor: {email.subject}")
+                        else:
+                            print(f"[ERROR] No se pudo guardar el correo: {email.subject}")
                     else:
                         print(f"[INFO] Correo ya existente: {email.subject}")
 
@@ -90,16 +96,21 @@ class EmailController(QObject):
                     print(f"[INFO] No hay más correos para recuperar: {e}")
                     break
 
-            pop_conn.quit()
-
             # Emitir señal para actualizar la UI
             self.update_received_signal.emit(self.dao.fetch_received_emails())
         except Exception as e:
             print(f"[ERROR] Error al recibir correos: {e}")
         finally:
+            # Cerrar la conexión POP3
+            if pop_conn:
+                try:
+                    pop_conn.quit()
+                except Exception as e:
+                    print(f"[ERROR] Error al cerrar la conexión POP3: {e}")
+
             # Detener la tarea de descarga y emitir señal de finalización
             self.task_manager.fetch_task.stop()
-            self.task_finished_signal.emit("fetch_emails")
+            self.task_finished_signal.emit("fetch_emails_manual" if manual else "fetch_emails_auto")
 
     def _send_email(self, recipient, subject, body, attachment_path=None):
         """Lógica para enviar un correo usando SMTP."""

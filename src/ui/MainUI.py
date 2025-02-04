@@ -73,7 +73,7 @@ class MainUI(QMainWindow):
         self.system_tab = SystemTab()
         self.game_tab = GameTab(controller=self.game_controller)
         self.scrapping_tab = ScrappingTab()
-        self.email_tab = EmailTab(email_controller=self.email_controller)
+        self.email_tab = EmailTab(email_controller=self.email_controller, main_window=self)
         self.chat_tab = ChatTab(chat_controller=self.chat_controller)
 
         self.tabs.addTab(self.radio_tab, "Radio")
@@ -171,7 +171,10 @@ class MainUI(QMainWindow):
         """Actualiza la barra de estado."""
         for key, value in data.items():
             if key in self.status_labels:
-                self.status_labels[key].setText(f"{key.capitalize()}: {value}")
+                if key == "emails":
+                    self.status_labels[key].setText(f"Correos: {value}")
+                else:
+                    self.status_labels[key].setText(f"{key.capitalize()}: {value}")
 
     def closeEvent(self, event):
         """Terminar todos los hilos y limpiar resources al cerrar la aplicación."""

@@ -7,10 +7,10 @@ class EmailTaskManager:
         self.fetch_task = ThreadenTask()
         self.send_task = ThreadenTask()
 
-    def start_fetch(self):
+    def start_fetch(self, manual=True):
         """Inicia la tarea para obtener correos."""
         if not self.fetch_task.is_running():
-            self.fetch_task.start(self.controller._fetch_emails)
+            self.fetch_task.start(self.controller._fetch_emails, manual)
         else:
             print("[INFO] Tarea de obtención ya está en ejecución.")
 

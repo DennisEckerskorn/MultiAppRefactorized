@@ -1,4 +1,5 @@
 import sqlite3
+import uuid
 from src.dao.utils.DatabaseConnection import DatabaseConnection
 from src.entities.mail.ReceivedMail import ReceivedMail
 from src.entities.mail.SentMail import SentMail
@@ -20,7 +21,7 @@ class EmailDao:
             recipient TEXT NOT NULL,
             subject TEXT,
             body TEXT,
-            message_id TEXT UNIQUE NOT NULL,
+            message_id TEXT UNIQUE,
             received_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             read BOOLEAN DEFAULT 0
         );
@@ -38,7 +39,7 @@ class EmailDao:
         """
         cursor = self.connection.cursor()
         try:
-            #cursor.execute(drop_table_query)
+           #cursor.execute(drop_table_query)
             cursor.execute(create_received_table_query)
             cursor.execute(create_sent_table_query)
             self.connection.commit()
@@ -62,6 +63,9 @@ class EmailDao:
 
     def save_received_mail(self, email: ReceivedMail):
         """Guarda un correo recibido en la base de datos si no existe."""
+        if not email.message_id:
+            email.message_id = str(uuid.uuid4())  # Generar un UUID único si falta el message_id
+
         if not self.email_exists(email.message_id):
             insert_query = """
             INSERT INTO received_emails (sender, recipient, subject, body, message_id)
@@ -156,13 +160,13 @@ class EmailDao:
             cursor.close()
 
     def mark_email_as_read(self, message_id):
-        """Marcar un correo como leído en la base de datos"""
+        """Marca un correo como leído en la base de datos."""
         query = "UPDATE received_emails SET read = 1 WHERE message_id = ?"
         cursor = self.connection.cursor()
         try:
             cursor.execute(query, (message_id,))
             self.connection.commit()
         except sqlite3.Error as e:
-            print(f"[ERROR] Error al marcar correo como leido: {e}")
+            print(f"[ERROR] Error al marcar correo como leído: {e}")
         finally:
             cursor.close()
