@@ -31,14 +31,6 @@ class MainUI(QMainWindow):
             smtp_server="192.168.120.103",
             email="dennis@psp.ieslamar.org",
             password="1234"
-            """
-                pop_server="s1.ieslamar.org",
-                smtp_server="s1.ieslamar.org",
-                email="dennis@fp.ieslamar.org",
-                password=""
-            """
-
-
         )
 
         # Inicializar el controlador de chat:

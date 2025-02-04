@@ -45,28 +45,50 @@ class EmailController(QObject):
     def _fetch_emails(self):
         """Lógica de obtención de correos."""
         try:
-            pop_conn = poplib.POP3(self.pop_server, self.pop_port)
+            # Usar POP3_SSL si el servidor requiere SSL
+            if self.pop_port == 995:
+                pop_conn = poplib.POP3_SSL(self.pop_server, self.pop_port)
+            else:
+                pop_conn = poplib.POP3(self.pop_server, self.pop_port)
+
+            # Habilitar depuración para ver los comandos enviados y las respuestas del servidor
+            pop_conn.set_debuglevel(2)
+
+            # Autenticación
             pop_conn.user(self.email)
             pop_conn.pass_(self.password)
 
-            message_count = len(pop_conn.list()[1])
-            for i in range(1, message_count + 1):
-                response, lines, octets = pop_conn.retr(i)
-                message = BytesParser(policy=default).parsebytes(b"\n".join(lines))
+            print("[INFO] Conexión POP3 establecida.")
 
-                email = ReceivedMail(
-                    sender=message["From"],
-                    recipient=self.email,
-                    subject=message["Subject"],
-                    body=message.get_body(preferencelist=("plain",)).get_content(),
-                    message_id=message["Message-ID"]
-                )
+            # Intentar recuperar correos directamente con RETR
+            i = 1
+            while True:
+                try:
+                    # Recuperar el correo con RETR
+                    response, lines, octets = pop_conn.retr(i)
+                    message = BytesParser(policy=default).parsebytes(b"\n".join(lines))
 
-                if not self.dao.email_exists(email.message_id):
-                    self.dao.save_received_mail(email)
-                    print(f"[INFO] Correo nuevo guardado: {email.subject}")
-                else:
-                    print(f"[INFO] Correo ya existente: {email.subject}")
+                    # Crear objeto ReceivedMail
+                    email = ReceivedMail(
+                        sender=message["From"],
+                        recipient=self.email,
+                        subject=message["Subject"],
+                        body=message.get_body(preferencelist=("plain",)).get_content(),
+                        message_id=message["Message-ID"]
+                    )
+
+                    # Guardar el correo en la base de datos si no existe
+                    if not self.dao.email_exists(email.message_id):
+                        self.dao.save_received_mail(email)
+                        print(f"[INFO] Correo nuevo guardado: {email.subject}")
+                    else:
+                        print(f"[INFO] Correo ya existente: {email.subject}")
+
+                    i += 1  # Incrementar el índice para el siguiente correo
+                except poplib.error_proto as e:
+                    # Si el servidor devuelve un error, asumimos que no hay más correos
+                    print(f"[INFO] No hay más correos para recuperar: {e}")
+                    break
 
             pop_conn.quit()
 
@@ -75,6 +97,7 @@ class EmailController(QObject):
         except Exception as e:
             print(f"[ERROR] Error al recibir correos: {e}")
         finally:
+            # Detener la tarea de descarga y emitir señal de finalización
             self.task_manager.fetch_task.stop()
             self.task_finished_signal.emit("fetch_emails")
 
