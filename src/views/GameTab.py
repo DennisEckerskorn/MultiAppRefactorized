@@ -55,7 +55,7 @@ class GameTab(QWidget):
 
         # Dibujar el borde del área de juego (solo una vez)
         self.border_rect = self.graphics_scene.addRect(0, 0, 200, 400)
-        border_pen = QPen(QColor("white"))
+        border_pen = QPen(QColor(0,255,255))
         border_pen.setWidth(2)
         self.border_rect.setPen(border_pen)
         self.border_rect.setZValue(-1)  # Mantén el borde detrás de las piezas
@@ -134,11 +134,12 @@ class GameTab(QWidget):
             current_lines = int(self.lines_label.text().split(": ")[1])
             self.lines_label.setText(f"Líneas ganadas: {current_lines + lines_cleared}")
         elif event == "game_over":
-            self.status_label.setText("Estado: Juego terminado")
-            result = QMessageBox.question(self, "Game Over", "¡Has perdido! ¿Quieres volver a intentar?",
-                                          QMessageBox.Yes | QMessageBox.No)
-            if result == QMessageBox.Yes:
-                self.reset_game(manual_reset=True)
+            if self.status_label.text() != "Estado: Juego terminado":
+                self.status_label.setText("Estado: Juego terminado")
+                result = QMessageBox.question(self, "Game Over", "¡Has perdido! ¿Quieres volver a intentar?",
+                                              QMessageBox.Yes | QMessageBox.No)
+                if result == QMessageBox.Yes:
+                    self.reset_game(manual_reset=True)
 
     def draw_board(self, board):
         for r, row in enumerate(board):
