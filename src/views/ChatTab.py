@@ -13,8 +13,6 @@ class ChatTab(QWidget):
         #self.server = ChatServer()
         self.init_ui()
 
-        #Commit test
-
         # Conectar señales del controlador con la interfaz
         self.controller.message_received_signal.connect(self.display_message)
         self.controller.messages_loaded_signal.connect(self.load_message)
