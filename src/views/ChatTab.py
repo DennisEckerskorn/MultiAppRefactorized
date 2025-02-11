@@ -133,5 +133,6 @@ class ChatTab(QWidget):
 
     def update_users_list(self, users):
         """Actualiza la lista de usuarios conectados"""
+        print(f"[DEBUG] Lista de usuarios recibida: {users}")
         self.users_list.clear()
         self.users_list.append("\n".join(users))

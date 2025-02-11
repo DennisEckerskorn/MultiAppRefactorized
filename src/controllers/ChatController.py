@@ -93,8 +93,20 @@ class ChatController(QObject):
             try:
                 self.socket.sendall("/users".encode("utf-8"))  # Comando para obtener la lista de usuarios
                 users_data = self.socket.recv(1024).decode("utf-8")
+
+                # Imprimir la respuesta del servidor para depuración
+                print(f"[DEBUG] Respuesta del servidor: {users_data}")
+
+                # Procesar la respuesta para extraer las IPs únicas
                 users_list = users_data.split("\n")
-                self.users_list_signal.emit(users_list)  # Emitir la señal con la lista de usuarios
+                unique_ips = set()
+                for user in users_list:
+                    if ":" in user:
+                        ip = user.split(":")[0]
+                        unique_ips.add(ip)
+
+                # Emitir la lista de IPs únicas
+                self.users_list_signal.emit(list(unique_ips))
             except Exception as e:
                 print(f"[ERROR] Error al actualizar la lista de usuarios: {e}")
             threading.Event().wait(5)

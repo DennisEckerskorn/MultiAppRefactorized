@@ -34,7 +34,7 @@ class MainUI(QMainWindow):
         )
 
         # Inicializar el controlador de chat:
-        self.chat_controller = ChatController(server_ip="192.168.120.106", server_port=3333)
+        self.chat_controller = ChatController(server_ip="192.168.120.106", server_port=12345)
 
         # Hilos para las pestañas
         self.tab_threads = {
