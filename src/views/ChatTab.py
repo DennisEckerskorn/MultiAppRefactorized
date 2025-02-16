@@ -3,14 +3,14 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt
 from src.controllers.ChatController import ChatController
-#from src.managers.ChatServer import ChatServer
+from src.managers.ChatServer import ChatServer
 
 
 class ChatTab(QWidget):
     def __init__(self, chat_controller: ChatController):
         super().__init__()
         self.controller = chat_controller
-        #self.server = ChatServer()
+        self.server = ChatServer()
         self.init_ui()
 
         # Conectar señales del controlador con la interfaz
@@ -93,7 +93,7 @@ class ChatTab(QWidget):
 
     def start_server(self):
         """Inicia el servidor de chat"""
-        #self.server.start_server()
+        self.server.start_server()
         self.controller.connect_to_server()
         self.connect_button.setEnabled(False)
         self.disconnect_button.setEnabled(True)
@@ -101,7 +101,7 @@ class ChatTab(QWidget):
 
     def stop_server(self):
         """Detiene el servidor de chat"""
-        #self.server.stop_server()
+        self.server.stop_server()
         self.controller.disconnect_from_server()
         self.connect_button.setEnabled(True)
         self.disconnect_button.setEnabled(False)

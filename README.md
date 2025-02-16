@@ -145,6 +145,112 @@ La aplicación utiliza **SQLite** como base de datos para almacenar datos de man
 
 ---
 
+## **Cómo Descargar e Instalar el Proyecto**
+
+A continuación, se describen los pasos necesarios para descargar, instalar y ejecutar la aplicación **MultiService App**. Además, se incluye cómo realizar un *fork* del repositorio para personalizar o contribuir al proyecto.
+
+### **Requisitos Previos**
+
+1. **Python 3.9 o superior**: Descárgalo desde [python.org](https://www.python.org/).
+2. **Pip**: El gestor de paquetes de Python debe estar instalado (viene incluido con Python en la mayoría de las instalaciones).
+3. **Git**: Necesario para clonar el repositorio. Descárgalo desde [git-scm.com](https://git-scm.com/).
+4. **Dependencias del sistema**:
+   - En sistemas basados en Linux, instala las bibliotecas necesarias para PySide6:
+     ```bash
+     sudo apt-get install libgl1-mesa-glx
+     ```
+
+### **Pasos de Instalación**
+
+#### **1. Realizar un Fork del Repositorio**
+
+Si deseas personalizar el proyecto o contribuir al desarrollo, realiza un *fork* del repositorio original:
+
+1. Ve al repositorio original en GitHub: [MultiService App](https://github.com/dennis-eckerskorn/multiservice-app).
+2. Haz clic en el botón **Fork** en la esquina superior derecha.
+3. Esto creará una copia del repositorio en tu cuenta de GitHub.
+
+#### **2. Clonar el Repositorio**
+
+Clona el repositorio desde tu cuenta de GitHub (o el original si no realizaste un *fork*):
+
+```bash
+git clone https://github.com/<TU_USUARIOmultiservice-app.git
+```
+---
+
+### **3. Acceder al Directorio del Proyecto**
+
+Navega al directorio del proyecto clonado:
+
+```bash
+cd multiservice-app
+```
+
+### **4. Crear un Entorno Virtual (Opcional pero Recomendado)**
+
+Es recomendable crear un entorno virtual para evitar conflictos con otras instalaciones de Python:
+
+```bash
+python -m venv venv
+```
+
+Activa el entorno virtual:
+
+- **En Windows**:
+  ```bash
+  venv\Scripts\activate
+  ```
+
+- **En macOS/Linux**:
+  ```bash
+  source venv/bin/activate
+  ```
+
+### **5. Instalar las Dependencias**
+
+Instala las bibliotecas necesarias para ejecutar la aplicación utilizando el archivo `requirements.txt`:
+
+```bash
+pip install -r requirements.txt
+```
+
+### **6. Configurar la Base de Datos**
+
+La aplicación incluye un archivo de configuración para inicializar la base de datos SQLite. Si no existe, se creará automáticamente al ejecutar la aplicación.
+
+### **7. Ejecutar la Aplicación**
+
+Inicia la aplicación ejecutando el archivo principal:
+
+```bash
+python main.py
+```
+
+---
+
+## **Contribuir al Proyecto**
+
+Si deseas contribuir al desarrollo de **MultiService App**, sigue estos pasos:
+
+1. Realiza un *fork* del repositorio original (como se describe en el paso 1).
+2. Crea una nueva rama para tu funcionalidad o corrección:
+   ```bash
+   git checkout -b nombre-de-tu-rama
+   ```
+3. Realiza tus cambios y confirma los *commits*:
+   ```bash
+   git add .
+   git commit -m "Descripción de los cambios"
+   ```
+4. Sube los cambios a tu repositorio:
+   ```bash
+   git push origin nombre-de-tu-rama
+   ```
+5. Crea un **Pull Request** desde tu repositorio en GitHub hacia el repositorio original.
+
+
+
 ### **Video Explicativo**
 
 Para una explicación detallada de la aplicación, consulta el siguiente video en YouTube:
