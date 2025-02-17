@@ -255,6 +255,6 @@ Si deseas contribuir al desarrollo de **MultiService App**, sigue estos pasos:
 
 Para una explicación detallada de la aplicación, consulta el siguiente video en YouTube:
 
-[![Video Explicativo](https://img.youtube.com/vi/<VIDEO_IDjpg)](https://www.youtube.com/watch?v=<VIDEO_ID)
+[![Video Explicativo](https://img.youtube.com/vi/<VIDEO_IDjpg)](https://youtu.be/70zfEct3kIc)
 
 ---
